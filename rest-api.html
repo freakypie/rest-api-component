@@ -1,0 +1,269 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<dom-module is="rest-api">
+  <script>
+    Polymer({
+      is: "rest-api",
+      properties: {
+        url: {
+          type: String,
+          observer: "handleUrlChanged",
+          reflectToAttribute: true,
+          notify: true
+        },
+        cacheKey: {
+          type: String,
+          observer: "handleCacheKeyChanged",
+        },
+        data: {
+          type: Object,
+          observer: "handleDataChanged",
+          notify: true
+        },
+        sending: {
+          type: Boolean,
+          notify: false,
+        },
+        /** used when there is no cache and the remote api fails */
+        fallback: {
+          type: Object
+        },
+        collectionParsePath: {
+          type: String
+        }
+      },
+      handleCacheKeyChanged: function() {
+        this.resume();
+      },
+      handleUrlChanged: function() {
+        this.request();
+      },
+      handleDataChanged: function() {
+        // console.log("data is changed", this.data, typeof this.data);
+      },
+      handleError: function(e) {
+        this.dispatchEvent(new CustomEvent("error", {detail: e}));
+      },
+      handleNetwork: function() {
+        this.processQueue();
+      },
+
+      ready: function() {
+        this._queue = [];
+        if (this.cacheKey) {
+          this.resume();
+        }
+        this.request();
+        window.addEventListener("online", this.handleNetwork.bind(this));
+      },
+
+      /** pull the collection out of the data */
+      parse: function(data) {
+        data = JSON.parse(data);
+        var keys = this.collectionParsePath.split(".");
+        for (var x=0; x<keys.length; x++) {
+          data = data[keys[x]];
+          if (data === undefined) {
+            throw new Error("Couldn't parse data with keys: " + this.collectionParsePath)
+          }
+        }
+        return data;
+      },
+
+      useFallback: function() {
+        if (! this.data) {
+          this.data = this.fallback;
+        }
+      },
+
+      /** get data saved in the cache */
+      resume: function() {
+        if (this.cacheKey && ! this.data) {
+          console.error("resuming", this.cacheKey);
+          var stored = localStorage[this.cacheKey];
+          if (stored) {
+            try {
+              this.data = this.parse(stored);
+            } catch(ex) {
+              console.info("parse error, using fallback", ex);
+              this.data = this.fallback;
+            }
+          } else {
+            console.info("no cache, using fallback");
+            this.data = this.fallback;
+          }
+        }
+      },
+
+      /** send a request to the api endpoint (url) */
+      request: function(force) {
+        if ((force || this.url != this.lastUrl) && ! this.sending) {
+          this.lastUrl = this.url;
+          this.sending = true;
+
+          console.error("requesting", this.url);
+          var request = new XMLHttpRequest();
+          request.open('GET', this.url, true);
+          request.onload = function() {
+            if (request.status >= 200 && request.status < 400) {
+              if (this.cacheKey) {
+                localStorage[this.cacheKey] = request.responseText;
+              }
+              try {
+                this.data = this.parse(request.responseText);
+              } catch (ex) {
+                this.handleError(ex);
+                this.useFallback();
+              }
+            } else {
+              // We reached our target server, but it returned an error
+              this.handleError(request.responseText);
+              this.useFallback();
+            }
+            this.sending = false;
+          }.bind(this);
+          request.onerror = function() {
+            // There was a connection error of some sort
+            this.sending = false;
+            this.handleError(request.responseText);
+            this.useFallback();
+          }.bind(this);
+          request.send();
+        }
+      },
+
+      /** clear cache and local data */
+      clear: function() {
+        delete localStorage[this.key];
+        this.data = null;
+      },
+
+      isOnline: function() {
+        if (this._testOnline !== undefined) {
+          return this._testOnline;
+        }
+        return navigator.onLine;
+      },
+
+      /** attempt to push local changes */
+      processQueue: function() {
+        if (this.isOnline() && this._queue.length > 0 && ! this._queueNext) {
+          this._queueNext = this._queue.shift();
+
+          var request = new XMLHttpRequest();
+          request.open(this._queueNext.method, this.url + (this._queueNext.url || ""), true);
+          request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+          request.onload = function() {
+            clearTimeout(this._queueTimeout);
+            console.log("success");
+            if (request.status == 200) {
+              this._queueNext.resolve();
+              this._queueNext = null;
+              this.processQueue();
+            } else {
+              this._queueFailure();
+            }
+          }.bind(this);
+          request.onerror = function() {
+            clearTimeout(this._queueTimeout);
+            this._queueFailure(request.responseText);
+          }.bind(this);
+
+          // in poor connectivity, requests can take up to 2 seconds
+          // to timeout, we'll shorten that a bit
+          this._queueTimeout = setTimeout(function() {
+            request.abort();
+            this._queueFailure("Timeout");
+
+            // TODO: make a variable for the timeout
+          }.bind(this), 1000);
+
+          request.send(JSON.stringify(this._queueNext.data));
+        }
+      },
+
+      _queueFailure: function(e) {
+        this._queueNext.attempts = (this._queueNext.attempts || 0) + 1
+        // TODO: make a variable for max attempts
+        if (this._queueNext.attempts > 3) {
+          // TODO: get better error messaging here
+          this._queueNext.fail(e);
+          this._queueNext = null;
+        } else {
+          // do another attempt
+          this._queue.push(this._queueNext);
+        }
+        clearTimeout(this._queueTimeout);
+        console.error("failed to send queue, pausing for a bit");
+        // TODO: make a variable for this timeout
+        this._queueTimeout = setTimeout(this.processQueue.bind(this), 100);
+      },
+
+      /** get a single model out of the collection */
+      get: function(attrs) {
+        var retval = null;
+        if (this.data) {
+          this.data.some(function(r) {
+            var matches = true;
+            for (var key in attrs) {
+              if (r[key] != attrs[key]) {
+                matches = false;
+                break;
+              }
+            }
+            if (matches) {
+              retval = r;
+              return true;
+            }
+            return false
+          })
+        }
+        return retval;
+      },
+
+      /** posts a new model to the api */
+      add: function(model) {
+        return new Promise(function(resolve, reject) {
+          this._queue.push({
+            method: "POST",
+            data: model,
+            resolve: resolve,
+            fail: reject
+          });
+          this.data.push(model);
+          this.processQueue();
+        }.bind(this));
+      },
+
+      update: function(model) {
+        return new Promise(function(resolve, reject) {
+          this._queue.push({
+            method: "PUT",
+            // TODO: allow alternate id name
+            url: "" + model.id + "/",
+            data: model,
+            resolve: resolve,
+            fail: reject
+          });
+          this.processQueue();
+        }.bind(this));
+      },
+
+      /** removes a model from the api */
+      remove: function(model) {
+        return new Promise(function(resolve, reject) {
+          this._queue.push({
+            method: "DELETE",
+            // TODO: allow alternate id name
+            url: "" + model.id + "/",
+            data: model,
+            resolve: resolve,
+            fail: reject
+          });
+          this.data.splice(this.data.indexOf(model), 1);
+          this.processQueue();
+        }.bind(this));
+      }
+    })
+  </script>
+</dom-module>

@@ -1,0 +1,21 @@
+{
+  "name": "rest-api",
+  "authors": [
+    "John Leith <jleith@velocitywebworks.com>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "x-tag-core": "^1.5.11",
+    "polymer": "^1.5.0"
+  }
+}

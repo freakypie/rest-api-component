@@ -1,0 +1,48 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<dom-module is="rest-listener">
+  <script>
+    Polymer({
+      is: "rest-listener",
+      properties: {
+        selector: {
+          type: String
+        },
+        idProp: {
+          type: String,
+          value: "objectId",
+        },
+        dataProp: {
+          type: String,
+          value: "data",
+          notify: true
+        }
+      },
+      ready: function() {
+        console.log("ready");
+      },
+      attached: function() {
+        console.log("loaded", this.parentElement);
+        this.parentElement.addEventListener("data-changed", function() {
+          this.update();
+        }.bind(this));
+        if (this.parentElement.data) {
+          this.update();
+        }
+      },
+      getElement: function() {
+        return document.querySelector(this.selector);
+      },
+      update: function() {
+        // TODO: detect if element is ready
+        console.log("data updated", this.dataProp, this.parentElement.data, this.getElement());
+        var el = this.getElement();
+        if (! el) {
+          console.error("element missing");
+        } else {
+          el[this.dataProp] = this.parentElement.data;
+        }
+      }
+    })
+  </script>
+</dom-module>

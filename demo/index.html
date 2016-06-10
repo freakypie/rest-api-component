@@ -1,0 +1,32 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>Nunjucks Object Test</title>
+  <script src="../bower_components/webcomponentsjs/webcomponents.min.js"></script>
+  <link rel="import" href="../bower_components/nunjucks-template/nunjucks-template.html">
+  <link rel="import" href="../bower_components/rest-api/rest-api.html">
+  <link rel="import" href="../bower_components/rest-api/rest-listener.html">
+</head>
+<body>
+  <h2>Testing Rest API</h2>
+  <rest-api url="https://swapi.co/api/people/"
+            collection-parse-path="results"
+            cache-key="sw">
+    <rest-listener selector="#template"></rest-listener>
+  </rest-api>
+  <nunjucks-template id="template">
+      {% if data %}
+      <ul>
+        {% for item in data %}
+          <li>
+              {{ item.name }}: {{ item.gender }}
+          </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <em>Sorry, looks like there are no results yet..</em>
+      {% endif %}
+  </nunjucks-template>
+</body>
+</html><html>
