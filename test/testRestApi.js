@@ -35,7 +35,7 @@ describe("rest-api", function() {
       assert.equal(this.el.data.length, 8);
       done();
     }.bind(this));
-    this.el.url = "https://swapi.co/api/people/";
+    this.el.endpoint = "https://swapi.co/api/people/";
   });
   it("uses local cache when remote data isn't available", function(done) {
     this.el.addEventListener("data-changed", function() {
@@ -51,7 +51,7 @@ describe("rest-api", function() {
       done();
     });
     FakeRequest.error = "Totally failed";
-    this.el.url = "https://swapi.co/api/people/";
+    this.el.endpoint = "https://swapi.co/api/people/";
   });
   it("handles server errors gracefully", function(done) {
     this.el.addEventListener("error", function(e) {
@@ -60,7 +60,7 @@ describe("rest-api", function() {
     });
     FakeRequest.status = 500;
     FakeRequest.response = "Totally failed";
-    this.el.url = "https://swapi.co/api/people/";
+    this.el.endpoint = "https://swapi.co/api/people/";
   });
   it("handles parse errors gracefully", function(done) {
     this.el.addEventListener("error", function(e) {
@@ -68,7 +68,7 @@ describe("rest-api", function() {
       done();
     }.bind(this));
     this.el.collectionParsePath = "";
-    this.el.url = "https://swapi.co/api/people/";
+    this.el.endpoint = "https://swapi.co/api/people/";
   });
   it("has a fallback when cache and remote fail", function(done) {
     this.el.addEventListener("data-changed", function() {
@@ -79,7 +79,7 @@ describe("rest-api", function() {
     FakeRequest.response = "Totally failed";
     this.el.fallback = ["one"];
     this.el.cacheKey = "fudge";
-    this.el.url = "https://swapi.co/api/people/";
+    this.el.endpoint = "https://swapi.co/api/people/";
   });
   it("can fetch a single record", function() {
     this.el.data = [

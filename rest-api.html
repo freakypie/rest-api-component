@@ -6,10 +6,10 @@
     Polymer({
       is: "rest-api",
       properties: {
-        url: {
+        endpoint: {
           type: String,
-          observer: "handleUrlChanged",
-          reflectToAttribute: true,
+          observer: "handleEndpointChanged",
+          // reflectToAttribute: true,
           notify: true
         },
         cacheKey: {
@@ -166,13 +166,13 @@
 
       /** send a request to the api endpoint (url) */
       request: function(force) {
-        if ((force || this.url != this.lastUrl) && ! this.sending) {
-          this.lastUrl = this.url;
+        if ((force || this.endpoint != this.lastUrl) && ! this.sending) {
+          this.lastUrl = this.endpoint;
           this.sending = true;
 
           return this.fetch({
             method: "GET",
-            url: this.url
+            url: this.endpoint
           }).then(function(request) {
             if (request.status >= 200 && request.status < 400) {
               if (this.cacheKey) {
@@ -226,9 +226,11 @@
         if (this.isOnline() && this._queue.length > 0 && ! this._queueNext) {
           this._queueNext = this._queue.shift();
 
+          console.log("next", this._queueNext, this.endpoint, this._queueNext.url);
           var request = this.setupRequest({
             method: this._queueNext.method,
-            url: this.url + (this._queueNext.url || "")
+            url: this.endpoint + (this._queueNext.url || ""),
+            data: this._queueNext.data
           });
           request.onload = function() {
             clearTimeout(this._queueTimeout);
@@ -319,14 +321,16 @@
       },
 
       /** removes a model from the api */
-      remove: function(model) {
+      remove: function(model, options) {
+        if (! options) { options = {}; }
         this.data.splice(this.data.indexOf(model), 1);
+        this.dispatchEvent(new CustomEvent("data-changed"));
 
         return this.addQueue({
-          method: "DELETE",
+          method: options.method || "DELETE",
           // TODO: allow alternate id name
-          url: "" + model.id + "/",
-          data: model
+          url: options.url || ("" + model.id + "/"),
+          data: options.data || model,
         });
       }
     })
