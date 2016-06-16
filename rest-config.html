@@ -1,0 +1,21 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<dom-module is="rest-config">
+  <script>
+    Polymer({
+      is: "rest-config",
+      properties: {
+        token: {
+          type: String,
+          value: null,
+          notify: true
+        },
+        server: {
+          type: String,
+          reflectToAttribute: true,
+          notify: true
+        }
+      }
+    })
+  </script>
+</dom-module>

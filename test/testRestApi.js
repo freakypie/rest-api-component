@@ -8,11 +8,17 @@ window.XMLHttpRequest = FakeRequest;
 
 describe("rest-api", function() {
 
-  beforeEach(function() {
+  beforeEach(function(done) {
+    this.config = document.createElement("rest-config");
     this.el = document.createElement("rest-api");
     this.el.collectionParsePath = "results";
+    this.testPanel.appendChild(this.config);
     this.testPanel.appendChild(this.el);
     FakeRequest.reset();
+
+    HTMLImports.whenReady(function() {
+      done();
+    });
   });
 
   afterEach(function() {
@@ -83,7 +89,7 @@ describe("rest-api", function() {
     assert.equal(this.el.get({id:1}).name, "Leia");
   });
   it("can post new data", function() {
-    this.el.url = "https://swapi.co/api/people/";
+    this.el.data = this.el.parse(FakeRequest.response);
     return this.el.add({name: "Luke"}).then(function(e) {
       assert.equal(this.el.data.length, 9);
     }.bind(this));
@@ -105,15 +111,21 @@ describe("rest-api", function() {
   });
   it("queues changes if the app isn't online, executes them when online", function () {
     this.el._testOnline = false;
-    this.el.url = "https://swapi.co/api/people/";
+    this.el.data = this.el.parse(FakeRequest.response);
     setTimeout(function() {
       this.el._testOnline = true;
       window.dispatchEvent(new CustomEvent("online"));
-    }.bind(this), 200);
+    }.bind(this), 20);
     return this.el.add({name: "Luke"}).then(function(e) {
       assert.equal(this.el.data.length, 9);
     }.bind(this));
   });
 
+  it("uses an authentication token", function(done) {
+    this.config.token = "token";
+    var request = this.el.setupRequest({method: "GET"});
+    assert.equal(request.headers.Authorization, "Token token");
+    done();
+  });
   xit("SOMEDAY: should be able to hook into websockets for instant updates");
 });

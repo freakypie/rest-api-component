@@ -2,6 +2,7 @@ class FakeRequest {
   open(method, url) {
     this.method = method;
     this.url = url;
+    this.headers = {};
   }
   send() {
     if (! FakeRequest.error) {
@@ -16,7 +17,9 @@ class FakeRequest {
   abort() {
     console.error("Aborting request");
   }
-  setRequestHeader() {}
+  setRequestHeader(header, value) {
+    this.headers[header] = value;
+  }
   static reset() {
     FakeRequest.status = 200;
     FakeRequest.response = `{

@@ -5,28 +5,49 @@
   <title>Nunjucks Object Test</title>
   <script src="../bower_components/webcomponentsjs/webcomponents.min.js"></script>
   <link rel="import" href="../bower_components/nunjucks-template/nunjucks-template.html">
+  <link rel="import" href="../bower_components/nunjucks-template/template-render.html">
   <link rel="import" href="../bower_components/rest-api/rest-api.html">
-  <link rel="import" href="../bower_components/rest-api/rest-listener.html">
+  <link rel="import" href="../bower_components/rest-api/rest-config.html">
 </head>
 <body>
-  <h2>Testing Rest API</h2>
-  <rest-api url="https://swapi.co/api/people/"
-            collection-parse-path="results"
-            cache-key="sw">
-    <rest-listener selector="#template"></rest-listener>
-  </rest-api>
-  <nunjucks-template id="template">
+  <nunjucks-template id="base-template">
+    Yo
+    {% block content %}
+      Hey!
+    {% endblock %}
+  </nunjucks-template>
+  <nunjucks-template id="person-template">
+    <li>
+        {{ item.name }}: {{ item.gender }}
+    </li>
+  </nunjucks-template>
+  <nunjucks-template id="people-template">
+    {% extends "#base-template" %}
+    {% block content %}
+      {{ super() }}
       {% if data %}
+      <b>People</b>
       <ul>
         {% for item in data %}
-          <li>
-              {{ item.name }}: {{ item.gender }}
-          </li>
+          {% include "#person-template" %}
         {% endfor %}
       </ul>
       {% else %}
-      <em>Sorry, looks like there are no results yet..</em>
+      <p><em>Sorry, looks like there are no results yet..</em></p>
       {% endif %}
+    {% endblock %}
   </nunjucks-template>
+
+  <h2>Testing Rest API</h2>
+  <template is="dom-bind">
+    <rest-config server="https://swapi.co/api/">
+      <rest-api url="people/"
+                collection-parse-path="results"
+                cache-key="sw-people"
+                data="{{data2}}">
+      </rest-api>
+    </rest-config>
+    <template-render target="#people-template" data="{{data2}}"></template-render>
+  </template>
 </body>
 </html><html>

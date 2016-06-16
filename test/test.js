@@ -1,11 +1,10 @@
 
 // importing to help webpack autoreload on changes
 require("html!../rest-api.html");
-require("html!../rest-listener.html");
 
 beforeEach(function() {
   // import our elements
-  var elements = ['rest-api', 'rest-listener'];
+  var elements = ['rest-api', 'rest-config'];
   elements.forEach(function(name) {
     var link = document.createElement("link");
     link.rel = "import";
@@ -20,7 +19,6 @@ beforeEach(function() {
 
 
 require("./testRestApi");
-require("./testRestListener");
 
 // if you forget you have hot loading enabled
 // it can cause headaches in the console
