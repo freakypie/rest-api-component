@@ -1,0 +1,61 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-toast/paper-toast.html">
+<link rel="import" href="./use-rest-behavior.html">
+
+
+<dom-module id="rest-form">
+  <template>
+    <style>
+      :host {
+        display: inline-block;
+        cursor: pointer;
+      }
+    </style>
+
+    <content>
+    </content>
+  </template>
+</dom-module>
+
+<!-- Registers custom element -->
+<script>
+Polymer({
+    is: 'rest-form',
+    properties: {
+      item: {
+        type: String
+      },
+      method: {
+        type: String,
+      },
+      extraUrl: {
+        type: String,
+      }
+    },
+    listeners: {
+      "click": "handleSubmit",
+    },
+    behaviors: [UseRest],
+    handleSubmit: function(e) {
+      e.preventDefault();
+
+      var data = {};
+      [].forEach.call(this.querySelectorAll("input"), function(input) {
+        data[input.name] = input.value;
+      });
+
+      console.log(this.extraUrl, this.getAttribute("extraUrl"));
+
+      this.getDataSource().addQueue({
+        url: this.extraUrl,
+        method: this.method,
+        data: data
+      }).then(function() {
+        console.log("form done", arguments);
+      }).catch(function(err) {
+        console.error("failed to submit form", err);
+      });
+    }
+});
+</script>

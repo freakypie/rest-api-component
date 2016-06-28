@@ -1,0 +1,63 @@
+<!-- Imports polymer -->
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-toast/paper-toast.html">
+<link rel="import" href="./use-rest-behavior.html">
+
+<!-- Defines element markup -->
+<dom-module id="item-remove">
+  <template>
+    <style>
+      :host {
+        display: inline-block;
+        cursor: pointer;
+      }
+    </style>
+
+    <content>
+    </content>
+
+    <paper-toast text="Removing item...">Dude it remove it!</paper-toast>
+  </template>
+</dom-module>
+
+<!-- Registers custom element -->
+<script>
+Polymer({
+    is: 'item-remove',
+    properties: {
+      item: {
+        type: String
+      }
+    },
+    listeners: {
+      "click": "handleDelete",
+    },
+    behaviors: [UseRest],
+    handleAdd: function(e) {
+      document.querySelector("paper-toast").open();
+      var source = this.getDataSource();
+      if (source) {
+        var item = source.get({id: this.item});
+        if (item) {
+          var extras = {};
+          if (this.queryParam) {
+            extras.url = this.url || " ";
+            extras.data = {};
+            extras.data[this.queryParam] = this.item;
+          } else if (this.uri) {
+            extras.url = this.uri;
+          }
+          console.log("sending", extras);
+          source.remove(item, extras).then(function() {
+            document.querySelector("#toast-added").open();
+          });
+        } else {
+          console.log("error invalid item");
+        }
+      } else {
+        console.log("error, invalid source", this.source);
+      }
+    }
+});
+</script>

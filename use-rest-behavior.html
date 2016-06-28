@@ -1,0 +1,37 @@
+<script>
+  UseRest = {
+    properties: {
+      source: {
+        type: String,
+        observer: "handleSourceChange",
+        value: "rest-api"
+      },
+      uri: {
+        type: String
+      },
+      queryParam: {
+        type: String
+      }
+    },
+    attached: function() {
+      this.handleSourceChange();
+    },
+    handleSourceChange:  function() {
+      if (! this.rest) {
+        this.rest = this.getDataSource();
+      }
+    },
+    getDataSource: function() {
+      var retval = null;
+      // check local dom first
+      if (this.parentElement) {
+        retval = this.parentElement.querySelector(this.source);
+      }
+      if (! retval) {
+        // check global dom next
+        retval = document.querySelector(this.source) || document;
+      }
+      return retval;
+    },
+  }
+</script>

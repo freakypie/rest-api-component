@@ -3,9 +3,27 @@
 
 <dom-module is="rest-api">
   <script>
+    function getCookie(name) {
+      var cookieValue = null;
+      if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+          var cookie = cookies[i].trim();
+          // Does this cookie string begin with the name we want?
+          if (cookie.substring(0, name.length + 1) == (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
     Polymer({
       is: "rest-api",
       properties: {
+        name: {
+          type: String
+        },
         endpoint: {
           type: String,
           observer: "handleEndpointChanged",
@@ -34,18 +52,11 @@
         }
       },
       handleCacheKeyChanged: function() {
-        this.resume();
       },
-      handleUrlChanged: function() {
-        this.url = this.url.replace(document.location, "");
-
-        // don't request till we are attached to the dom
-        if (this.parentElement) {
-          this.request();
-        }
+      handleEndpointChanged: function() {
       },
       handleDataChanged: function() {
-        // console.log("data is changed", this.data, typeof this.data);
+        console.log("data is changed", this.data, typeof this.data);
       },
       handleError: function(e) {
         this.dispatchEvent(new CustomEvent("error", {detail: e}));
@@ -64,6 +75,7 @@
 
       attached: function() {
         this.request();
+        console.log("attached");
       },
 
       getConfig: function() {
@@ -134,10 +146,16 @@
             url = this.config.server + url;
           }
         }
+
         request.open(options.method || 'GET', url, true);
         request.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         if (options.data) {
           request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+        }
+        if (! options.method || options.method != "GET") {
+          // TODO: make this configurable
+          var csrftoken = getCookie('csrftoken');
+          request.setRequestHeader("X-CSRFToken", csrftoken);
         }
         if (this.config && this.config.token) {
           request.setRequestHeader(
@@ -225,8 +243,7 @@
       processQueue: function() {
         if (this.isOnline() && this._queue.length > 0 && ! this._queueNext) {
           this._queueNext = this._queue.shift();
-
-          console.log("next", this._queueNext, this.endpoint, this._queueNext.url);
+          console.log("queue:", this._queueNext);
           var request = this.setupRequest({
             method: this._queueNext.method,
             url: this.endpoint + (this._queueNext.url || ""),
@@ -299,6 +316,12 @@
         return retval;
       },
 
+      sendUpdatedSignal: function() {
+        console.log("data updated");
+        this.dispatchEvent(new CustomEvent("updated", {
+          bubbles: true, cancelable: true}));
+      },
+
       /** posts a new model to the api */
       add: function(model) {
         if (! this.data) {
@@ -308,7 +331,9 @@
         return this.addQueue({
           method: "POST",
           data: model
-        });
+        }).then(function() {
+          this.sendUpdatedSignal();
+        }.bind(this));
       },
 
       update: function(model) {
@@ -331,7 +356,10 @@
           // TODO: allow alternate id name
           url: options.url || ("" + model.id + "/"),
           data: options.data || model,
-        });
+        }).then(function() {
+          console.log("item removed");
+          this.sendUpdatedSignal();
+        }.bind(this));
       }
     })
   </script>

@@ -1,0 +1,49 @@
+<!-- Imports polymer -->
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-toast/paper-toast.html">
+<link rel="import" href="./use-rest-behavior.html">
+
+<!-- Defines element markup -->
+<dom-module id="item-add">
+  <template>
+    <style>
+      :host {
+        display: inline-block;
+        cursor: pointer;
+      }
+    </style>
+
+    <content>
+    </content>
+
+    <paper-toast id="toast-adding" text="Adding item..."></paper-toast>
+    <paper-toast id="toast-added" text="Added item!"></paper-toast>
+  </template>
+</dom-module>
+
+<!-- Registers custom element -->
+<script>
+Polymer({
+    is: 'item-add',
+    properties: {
+      item: {
+        type: String
+      }
+    },
+    listeners: {
+      "click": "handleAdd",
+    },
+    behaviors: [UseRest],
+    handleAdd: function(e) {
+      e.preventDefault();
+      console.log("adding smile");
+      document.querySelector("#toast-adding").open();
+      var data = {};
+      data[this.queryParam || "item"] = this.item;
+      this.getDataSource().add(data).then(function() {
+        document.querySelector("#toast-added").open();
+      });
+    }
+});
+</script>
