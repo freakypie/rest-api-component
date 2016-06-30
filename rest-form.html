@@ -28,6 +28,7 @@ Polymer({
       },
       method: {
         type: String,
+        value: "add"
       },
       extraUrl: {
         type: String,
@@ -45,17 +46,28 @@ Polymer({
         data[input.name] = input.value;
       });
 
-      console.log(this.extraUrl, this.getAttribute("extraUrl"));
+      this.showStarting();
 
-      this.getDataSource().addQueue({
+      this.getDataSource()[this.method](data, {
         url: this.extraUrl,
-        method: this.method,
-        data: data
-      }).then(function() {
-        console.log("form done", arguments);
-      }).catch(function(err) {
-        console.error("failed to submit form", err);
-      });
+      }).then(function(request) {
+        this.showSuccess(request);
+      }.bind(this)).catch(function(err) {
+        this.showFailure(err);
+      }.bind(this));
+    },
+    _dispatch: function(name, detail) {
+      this.dispatchEvent(new CustomEvent(name, {
+        detail: detail, bubbles: true, cancelable: true}));
+    },
+    showStarting: function() {
+      this._dispatch("rest-form:saving")
+    },
+    showSuccess: function(request) {
+      this._dispatch("rest-form:success", request);
+    },
+    showFailure: function(request) {
+      this._dispatch("rest-form:failure", request);
     }
 });
 </script>

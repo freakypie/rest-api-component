@@ -56,7 +56,7 @@
       handleEndpointChanged: function() {
       },
       handleDataChanged: function() {
-        console.log("data is changed", this.data, typeof this.data);
+        // console.log("data is changed", this.data.length, typeof this.data);
       },
       handleError: function(e) {
         this.dispatchEvent(new CustomEvent("error", {detail: e}));
@@ -74,8 +74,7 @@
       },
 
       attached: function() {
-        this.request();
-        console.log("attached");
+        // this.request();
       },
 
       getConfig: function() {
@@ -243,7 +242,6 @@
       processQueue: function() {
         if (this.isOnline() && this._queue.length > 0 && ! this._queueNext) {
           this._queueNext = this._queue.shift();
-          console.log("queue:", this._queueNext);
           var request = this.setupRequest({
             method: this._queueNext.method,
             url: this.endpoint + (this._queueNext.url || ""),
@@ -252,7 +250,7 @@
           request.onload = function() {
             clearTimeout(this._queueTimeout);
             if (request.status == 200) {
-              this._queueNext.resolve();
+              this._queueNext.resolve(request);
               this._queueNext = null;
               this.processQueue();
             } else {
@@ -261,7 +259,7 @@
           }.bind(this);
           request.onerror = function() {
             clearTimeout(this._queueTimeout);
-            this._queueFailure(request.responseText);
+            this._queueFailure(request);
           }.bind(this);
 
           // in poor connectivity, requests can take up to 2 seconds
@@ -291,7 +289,10 @@
         clearTimeout(this._queueTimeout);
         console.error("failed to send queue, pausing for a bit");
         // TODO: make a variable for this timeout
-        this._queueTimeout = setTimeout(this.processQueue.bind(this), 100);
+        this._queueTimeout = setTimeout(
+          this.processQueue.bind(this),
+          1000 * this._queueNext.attempts
+        );
       },
 
       /** get a single model out of the collection */
@@ -317,7 +318,8 @@
       },
 
       sendUpdatedSignal: function() {
-        console.log("data updated");
+        // this.dispatchEvent(new CustomEvent("data-changed", {
+        //   bubbles: true, cancelable: true}));
         this.dispatchEvent(new CustomEvent("updated", {
           bubbles: true, cancelable: true}));
       },
@@ -331,9 +333,7 @@
         return this.addQueue({
           method: "POST",
           data: model
-        }).then(function() {
-          this.sendUpdatedSignal();
-        }.bind(this));
+        });
       },
 
       update: function(model) {
@@ -348,16 +348,28 @@
       /** removes a model from the api */
       remove: function(model, options) {
         if (! options) { options = {}; }
-        this.data.splice(this.data.indexOf(model), 1);
-        this.dispatchEvent(new CustomEvent("data-changed"));
 
+        var object = null;
+        if (model.id) {
+          for(var idx=0; idx<this.data.length; idx++) {
+            if (this.data[idx].id == model.id) {
+              object = this.data[idx];
+              break;
+            }
+          }
+        } else {
+          object = model;
+        }
+
+        if (object) {
+          this.splice('data', this.data.indexOf(object), 1);
+        }
         return this.addQueue({
           method: options.method || "DELETE",
           // TODO: allow alternate id name
           url: options.url || ("" + model.id + "/"),
           data: options.data || model,
         }).then(function() {
-          console.log("item removed");
           this.sendUpdatedSignal();
         }.bind(this));
       }

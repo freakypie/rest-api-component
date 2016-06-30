@@ -2,52 +2,97 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Nunjucks Object Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rest API Test</title>
   <script src="../bower_components/webcomponentsjs/webcomponents.min.js"></script>
   <link rel="import" href="../bower_components/nunjucks-template/nunjucks-template.html">
   <link rel="import" href="../bower_components/nunjucks-template/template-render.html">
+  <link rel="import" href="../bower_components/paper-button/paper-button.html">
+  <link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+  <link rel="import" href="../bower_components/iron-icon/iron-icon.html">
   <link rel="import" href="../bower_components/rest-api/rest-api.html">
   <link rel="import" href="../bower_components/rest-api/rest-config.html">
+  <link rel="import" href="../bower_components/rest-api/rest-query.html">
+  <link rel="import" href="../bower_components/rest-api/item-add.html">
+  <link rel="import" href="../bower_components/rest-api/item-remove.html">
 </head>
 <body>
-  <nunjucks-template id="base-template">
-    Yo
-    {% block content %}
-      Hey!
-    {% endblock %}
-  </nunjucks-template>
   <nunjucks-template id="person-template">
     <li>
         {{ item.name }}: {{ item.gender }}
     </li>
   </nunjucks-template>
   <nunjucks-template id="people-template">
-    {% extends "#base-template" %}
-    {% block content %}
-      {{ super() }}
-      {% if data %}
-      <b>People</b>
-      <ul>
-        {% for item in data %}
-          {% include "#person-template" %}
-        {% endfor %}
-      </ul>
-      {% else %}
-      <p><em>Sorry, looks like there are no results yet..</em></p>
-      {% endif %}
-    {% endblock %}
+    {% if data %}
+    <b>People</b>
+    <ul>
+      {% for item in data %}
+        {% include "#person-template" %}
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p><em>Sorry, looks like there are no results yet..</em></p>
+    {% endif %}
   </nunjucks-template>
 
   <h2>Testing Rest API</h2>
   <template is="dom-bind">
-    <rest-config server="https://swapi.co/api/">
-      <rest-api url="people/"
-                collection-parse-path="results"
-                cache-key="sw-people"
-                data="{{data2}}">
+      <!-- <rest-config server="https://swapi.co/api/"> -->
+    <rest-config server="http://localhost:8005/api/"
+                 token="ffe3ac9804af0ba8ebd188ae91d871a127ed8b4e">
+      <rest-api name="cart"
+                endpoint="cart/"
+                collection-parse-path="items"
+                cache-key="cart">
+      </rest-api>
+      <rest-api name="itemlist"
+                endpoint="itemlist/"
+                collection-parse-path="items"
+                cache-key="itemlist">
       </rest-api>
     </rest-config>
-    <template-render target="#people-template" data="{{data2}}"></template-render>
+
+    <h2>Cart List</h2>
+    <rest-query source="rest-api[name=cart]" data="{{cartitems}}"></rest-query>
+    <template id="foo" is="dom-repeat" items="{{cartitems}}">
+      <div>
+        <img src="{{item.product.images.0.25_cropped}}">
+        <b>{{item.product.name}}</b>
+        <item-remove source="rest-api[name=cart]" query-param="id" item="{{item.id}}">
+          <iron-icon icon="close" product-id="{{item.id}}"></iron-icon>
+        </item-remove>
+      </div>
+    </template>
+
+    <h2>Item list</h2>
+    <rest-query source="rest-api[name=itemlist]" data="{{itelist}}"></rest-query>
+    <template is="dom-repeat" items="{{itelist}}">
+      <div>
+        <img src="{{item.images.0.25_cropped}}">
+        <b>{{item.name}}</b>
+        <item-add source="rest-api[name=cart]" query-param="add_items" item="{{item.id}}">
+          <iron-icon class="add-btn" icon="shopping-basket" product-id="{{item.id}}"></iron-icon>
+        </item-add>
+        <item-remove source="rest-api[name=itemlist]" item="{{item.id}}">
+          <iron-icon class="remove-btn" icon="close" product-id="{{item.id}}"></iron-icon>
+        </item-remove>
+      </div>
+    </template>
+    <item-add item="SMILE">
+      <paper-button raised>Add SMILE</paper-button>
+    </item-add>
   </template>
+  <script>
+    document.addEventListener("WebComponentsReady", function() {
+      var apis = document.querySelectorAll("rest-api");
+      [].forEach.call(apis, function(api) {
+        console.log(api);
+        api.addEventListener("updated", function() {
+          console.log("updated data");
+          api.request(true);
+        });
+      });
+    });
+  </script>
 </body>
 </html><html>

@@ -36,6 +36,7 @@ describe("rest-api", function() {
       done();
     }.bind(this));
     this.el.endpoint = "https://swapi.co/api/people/";
+    this.el.request();
   });
   it("uses local cache when remote data isn't available", function(done) {
     this.el.addEventListener("data-changed", function() {
@@ -52,6 +53,7 @@ describe("rest-api", function() {
     });
     FakeRequest.error = "Totally failed";
     this.el.endpoint = "https://swapi.co/api/people/";
+    this.el.request();
   });
   it("handles server errors gracefully", function(done) {
     this.el.addEventListener("error", function(e) {
@@ -61,6 +63,7 @@ describe("rest-api", function() {
     FakeRequest.status = 500;
     FakeRequest.response = "Totally failed";
     this.el.endpoint = "https://swapi.co/api/people/";
+    this.el.request();
   });
   it("handles parse errors gracefully", function(done) {
     this.el.addEventListener("error", function(e) {
@@ -69,6 +72,7 @@ describe("rest-api", function() {
     }.bind(this));
     this.el.collectionParsePath = "";
     this.el.endpoint = "https://swapi.co/api/people/";
+    this.el.request();
   });
   it("has a fallback when cache and remote fail", function(done) {
     this.el.addEventListener("data-changed", function() {

@@ -10,71 +10,31 @@
 <!-- Registers custom element -->
 <script>
 Polymer({
-    is: 'rest-query',
-    properties: {
-      data: {
-        type: Object,
-        notify: true
-      }
-    },
-    behaviors: [UseRest],
-
-    ready: function() {
-    },
-
-    attached: function() {
-      this.rest = this.getDataSource();
-      if (this.rest) {
-        this.data = this.rest.data;
-        this.rest.request();
-        this.rest.addEventListener("data-changed", function() {
-          this.data = this.rest.data;
-        }.bind(this));
-
-        setTimeout(function() {
-          this.dispatchEvent(new CustomEvent("data-changed"));
-        }.bind(this), 1000);
-      }
-    },
-
-    handleRemove: function(e) {
-      var element = this.rest.get({id: e.detail.id});
-      if (element) {
-        var opts = {
-          data: {id: e.detail.id}
-        };
-        this.rest.remove(element, opts).then(function() {
-          this.querySelector("#toast-removed").open();
-          return this.rest.request(true);
-        }.bind(this));
-      } else {
-        console.log("no matching element");
-      }
-    },
-
-    handleTap: function(e) {
-      e.preventDefault();
-      if (e.target.matches(".add-btn")) {
-        this.handleAddToCart(e);
-      }
-    },
-
-    handleAddToCart: function(e) {
-      this.rest.fetch({
-        url: "cart/",
-        method: "POST",
-        data: {add_items: [{id: e.target.productId}]}
-      }).then(function(response) {
-        this.querySelector("#toast-cart-added").open();
-        this.dispatchEvent(new CustomEvent("cartitem:added", {
-          detail: response,
-          cancelable: true,
-          bubbles: true
-        }));
-      }.bind(this)).catch(function(response) {
-        this.querySelector("#toast-cart-failed").open();
-        console.error(response);
-      }.bind(this));
+  is: 'rest-query',
+  properties: {
+    data: {
+      type: Array,
+      notify: true
     }
+  },
+  behaviors: [UseRest],
+
+  ready: function() {
+  },
+
+  attached: function() {
+    this.rest = this.getDataSource();
+    if (this.rest) {
+      this.data = this.rest.data;
+      this.rest.request();
+      this.rest.addEventListener("data-changed", function() {
+        console.log("rest-query: got data", this.rest.data.length);
+        this.data = this.rest.data.slice();
+      }.bind(this));
+      console.log("rest-query: waiting for data from rest", this.rest)
+    } else {
+      console.error("rest-query: can't get rest element", this.source);
+    }
+  }
 });
 </script>
