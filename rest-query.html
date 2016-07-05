@@ -15,6 +15,13 @@ Polymer({
     data: {
       type: Array,
       notify: true
+    },
+    completeData: {
+      type: Object,
+      notify: true
+    },
+    collectionParsePath: {
+      type: String
     }
   },
   behaviors: [UseRest],
@@ -28,13 +35,13 @@ Polymer({
       this.data = this.rest.data;
       this.rest.request();
       this.rest.addEventListener("data-changed", function() {
-        console.log("rest-query: got data", this.rest.data.length);
-        this.data = this.rest.data.slice();
+        this.data = this.rest.parse(this.rest.completeData, this.collectionParsePath).slice();
+        console.log("rest-query: got data", this.collectionParsePath, this.rest.data.length);
       }.bind(this));
       console.log("rest-query: waiting for data from rest", this.rest)
     } else {
       console.error("rest-query: can't get rest element", this.source);
     }
-  }
+  },
 });
 </script>

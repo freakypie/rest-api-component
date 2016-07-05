@@ -97,13 +97,15 @@
       },
 
       /** pull the collection out of the data */
-      parse: function(data) {
-        data = JSON.parse(data);
-        var keys = this.collectionParsePath.split(".");
+      parse: function(data, path) {
+        if (! path) {
+          path = this.collectionParsePath;
+        }
+        var keys = path.split(".");
         for (var x=0; x<keys.length; x++) {
           data = data[keys[x]];
           if (data === undefined) {
-            throw new Error("Couldn't parse data with keys: " + this.collectionParsePath)
+            throw new Error("Couldn't parse data with keys: " + path)
           }
         }
         return data;
@@ -196,7 +198,15 @@
                 localStorage[this.cacheKey] = request.responseText;
               }
               try {
-                this.data = this.parse(request.responseText);
+                this.completeData = JSON.parse(request.responseText);
+                var data = this.parse(this.completeData);
+                this.data = data;
+                // this.data = [];
+                // data.forEach(function(row, i) {
+                //   setTimeout(function() {
+                //     this.push('data', row);
+                //   }.bind(this), i * 100);
+                // }.bind(this));
               } catch (ex) {
                 this.handleError(ex);
                 this.useFallback();
