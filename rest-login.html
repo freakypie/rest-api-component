@@ -1,0 +1,75 @@
+<!-- Imports polymer -->
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../rest-api/rest-form.html">
+<link rel="import" href="./use-rest-behavior.html">
+
+<!-- Defines element markup -->
+<dom-module id="rest-login">
+  <template>
+    <rest-form source="{{source}}">
+      <paper-input label="Username"
+                   name="username">
+      </paper-input>
+      <paper-input label="Password"
+                   name="password"
+                   type="password">
+      </paper-input>
+      <paper-button raised>Login</paper-button>
+    </rest-form>
+  </template>
+</dom-module>
+
+<!-- Registers custom element -->
+<script>
+  Polymer({
+    is: 'rest-login',
+    behaviors: [UseRest],
+    properties: {
+      token: {
+        type: String,
+        observer: "handleTokenChanged",
+        notify: true
+      },
+      hasToken: {
+        type: Boolean,
+        computed: "computeHasToken(token)"
+      },
+      localStorageName: {
+        type: String,
+        value: "userToken"
+      }
+    },
+    listeners: {
+      "rest-form:success": "handleSuccess"
+    },
+
+    computeHasToken: function(token) {
+      return new Boolean(token);
+    },
+
+    handleSuccess: function(e) {
+      var data = JSON.parse(e.detail.responseText);
+      this.token = data.token;
+      console.log("rest-login: token", this.token);
+    },
+
+    handleTokenChanged: function() {
+      if (this.token) {
+        localStorage[this.localStorageName] = this.token;
+        if (this.rest) {
+          this.rest.token = this.token;
+        }
+      }
+    },
+
+    // Fires when an instance of the element is created
+    attached: function () {
+      if (localStorage[this.localStorageName]) {
+        console.log("rest-login: remembered token", this.token);
+        this.token = localStorage[this.localStorageName];
+      }
+    }
+  });
+</script>
