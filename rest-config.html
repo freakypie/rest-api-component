@@ -7,14 +7,17 @@
       properties: {
         token: {
           type: String,
-          value: null,
-          notify: true
+          notify: true,
+          observer: "handleTokenChanged"
         },
         server: {
           type: String,
           reflectToAttribute: true,
           notify: true
         }
+      },
+      handleTokenChanged: function() {
+        console.log("rest-config: token", this.token);
       }
     })
   </script>

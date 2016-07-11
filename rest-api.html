@@ -59,6 +59,7 @@
         // console.log("data is changed", this.data.length, typeof this.data);
       },
       handleError: function(e) {
+        console.error(e);
         this.dispatchEvent(new CustomEvent("error", {detail: e}));
       },
       handleNetwork: function() {
@@ -99,11 +100,13 @@
       /** pull the collection out of the data */
       parse: function(data) {
         data = JSON.parse(data);
-        var keys = this.collectionParsePath.split(".");
-        for (var x=0; x<keys.length; x++) {
-          data = data[keys[x]];
-          if (data === undefined) {
-            throw new Error("Couldn't parse data with keys: " + this.collectionParsePath)
+        if (this.collectionParsePath) {
+          var keys = this.collectionParsePath.split(".");
+          for (var x=0; x<keys.length; x++) {
+            data = data[keys[x]];
+            if (data === undefined) {
+              throw new Error("Couldn't parse data with keys: " + this.collectionParsePath)
+            }
           }
         }
         return data;
@@ -207,11 +210,13 @@
               this.useFallback();
             }
             this.sending = false;
+            return request;
           }.bind(this)).catch(function(request) {
             // There was a connection error of some sort
             this.sending = false;
             this.handleError(request.responseText);
             this.useFallback();
+            return request;
           }.bind(this));
         }
       },

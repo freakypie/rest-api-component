@@ -31,30 +31,33 @@ Polymer({
         value: "add"
       },
       extraUrl: {
-        type: String,
+        type: String
       }
     },
     listeners: {
-      "click": "handleSubmit",
+      "click": "handleSubmit"
     },
     behaviors: [UseRest],
     handleSubmit: function(e) {
-      e.preventDefault();
+      console.log(/BUTTON/.test(e.target.tagName), e.target.tagName)
+      if (/BUTTON/.test(e.target.tagName)) {
+        e.preventDefault();
 
-      var data = {};
-      [].forEach.call(this.querySelectorAll("input"), function(input) {
-        data[input.name] = input.value;
-      });
+        var data = {};
+        [].forEach.call(this.querySelectorAll("input"), function(input) {
+          data[input.name] = input.value;
+        });
 
-      this.showStarting();
+        this.showStarting();
 
-      this.getDataSource()[this.method](data, {
-        url: this.extraUrl,
-      }).then(function(request) {
-        this.showSuccess(request);
-      }.bind(this)).catch(function(err) {
-        this.showFailure(err);
-      }.bind(this));
+        this.getDataSource()[this.method](data, {
+          url: this.extraUrl
+        }).then(function(request) {
+          this.showSuccess(request);
+        }.bind(this)).catch(function(err) {
+          this.showFailure(err);
+        }.bind(this));
+      }
     },
     _dispatch: function(name, detail) {
       this.dispatchEvent(new CustomEvent(name, {
