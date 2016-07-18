@@ -32,32 +32,51 @@ Polymer({
       },
       extraUrl: {
         type: String
+      },
+      autoSubmit: {
+        type: Boolean,
+        value: false
       }
     },
     listeners: {
-      "click": "handleSubmit"
+      "click": "handleSubmit",
+      "change": "handleChange"
     },
     behaviors: [UseRest],
+    handleChange: function(e) {
+      console.log("changed", e)
+      if (this.autoSubmit) {
+        if (e.target.matches("[name]")) {
+          this.submit();
+        }
+      }
+    },
     handleSubmit: function(e) {
       console.log(/BUTTON/.test(e.target.tagName), e.target.tagName)
       if (/BUTTON/.test(e.target.tagName)) {
         e.preventDefault();
 
-        var data = {};
-        [].forEach.call(this.querySelectorAll("input"), function(input) {
-          data[input.name] = input.value;
-        });
-
-        this.showStarting();
-
-        this.getDataSource()[this.method](data, {
-          url: this.extraUrl
-        }).then(function(request) {
-          this.showSuccess(request);
-        }.bind(this)).catch(function(err) {
-          this.showFailure(err);
-        }.bind(this));
       }
+    },
+    submit: function() {
+      var data = {};
+      [].forEach.call(this.querySelectorAll("[name]"), function(input) {
+        if ("checked" in input) {
+          data[input.name] = input.checked;
+        } else {
+          data[input.name] = input.value;
+        }
+      });
+
+      this.showStarting();
+
+      this.getDataSource()[this.method](data, {
+        url: this.extraUrl
+      }).then(function(request) {
+        this.showSuccess(request);
+      }.bind(this)).catch(function(err) {
+        this.showFailure(err);
+      }.bind(this));
     },
     _dispatch: function(name, detail) {
       this.dispatchEvent(new CustomEvent(name, {

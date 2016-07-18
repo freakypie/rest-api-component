@@ -351,11 +351,29 @@
         });
       },
 
-      update: function(model) {
+      post: function(model, options) {
+        if (! options) { options = {}; }
+        return this.addQueue({
+          method: "POST",
+          url: options.url || null,
+          data: model
+        });
+      },
+
+      update: function(model, options) {
         return this.addQueue({
           method: "PUT",
           // TODO: allow alternate id name
-          url: "" + model.id + "/",
+          url: options.url || ("" + model.id + "/"),
+          data: model
+        });
+      },
+
+      patch: function(model, options) {
+        return this.addQueue({
+          method: "PATCH",
+          // TODO: allow alternate id name
+          url: options.url || ("" + model.id + "/"),
           data: model
         });
       },
