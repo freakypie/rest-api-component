@@ -1,0 +1,42 @@
+<link rel="import" href="../polymer/polymer.html">
+<script src="../socket.io-client/socket.io.js"></script>
+
+<dom-module is="rest-ws">
+  <script>
+    Polymer({
+      is: "rest-ws",
+      properties: {
+        url : {type: String},
+        auto : {type: Boolean, value: true},
+        socket : {type: Object}
+      },
+      attached: function (){
+        if (this.auto){
+          this.connect();
+        }
+      },
+      connect : function () {
+        if ( ! this.socket ) {
+          this._connect = new Promise(function(resolve, reject) {
+            this.socket = io.connect(this.url);
+            this.socket.on('connect', this.fireEvent('socket-connect'));
+            this.socket.on('connect_error', this.fireEvent('socket-error'));
+            this.socket.on('connect_timeout', this.fireEvent('socket-timeout'));
+            resolve( this.socket );
+          }.bind(this));
+        }
+       return this._connect;
+      },
+      fireEvent : function ( name ){
+        return function (){
+          this.dispatch(new CustomEvent(name));
+        }.bind(this);
+      },
+      detached : function (){
+        if ( this.socket ) {
+          this.socket.destroy();
+        }
+      }
+    });
+  </script>
+</dom-module>
