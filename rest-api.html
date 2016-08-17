@@ -335,14 +335,15 @@
       },
 
       /** posts a new model to the api */
-      add: function(model) {
+      add: function(model, options) {
         if (! this.data) {
           this.data = [];
         }
         this.data.push(model);
         return this.addQueue({
-          method: "POST",
-          data: model
+          method: options.method || "POST",
+          data: options.data || model,
+          url: options.url || "",
         });
       },
 
@@ -360,28 +361,28 @@
         if (! options) { options = {}; }
 
         var object = null;
-        if (model.id) {
-          for(var idx=0; idx<this.data.length; idx++) {
-            if (this.data[idx].id == model.id) {
-              object = this.data[idx];
-              break;
+        if (this.data) {
+          if (model.id) {
+            for (var idx = 0; idx < this.data.length; idx++) {
+              if (this.data[idx].id == model.id) {
+                object = this.data[idx];
+                break;
+              }
             }
+          } else {
+            object = model;
           }
-        } else {
-          object = model;
-        }
 
-        if (object) {
-          this.splice('data', this.data.indexOf(object), 1);
+          if (object) {
+            this.splice('data', this.data.indexOf(object), 1);
+          }
         }
         return this.addQueue({
           method: options.method || "DELETE",
           // TODO: allow alternate id name
           url: options.url || ("" + model.id + "/"),
           data: options.data || model,
-        }).then(function() {
-          this.sendUpdatedSignal();
-        }.bind(this));
+        });
       }
     })
   </script>

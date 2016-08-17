@@ -40,7 +40,9 @@ Polymer({
     behaviors: [UseRest],
     handleSubmit: function(e) {
       e.preventDefault();
-
+      this.submit();
+    },
+    submit: function() {
       var data = {};
       [].forEach.call(this.querySelectorAll("input"), function(input) {
         data[input.name] = input.value;
