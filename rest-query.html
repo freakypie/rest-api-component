@@ -32,15 +32,19 @@ Polymer({
   attached: function() {
     this.rest = this.getDataSource();
     if (this.rest) {
-      this.data = this.rest.data;
+      if (this.rest.completeData && Object.keys(this.rest.completeData).length > 0) {
+        this.data = this.rest.parse(this.rest.completeData, this.collectionParsePath).slice();
+      } else {
+        this.data = [];
+      }
       this.rest.request();
       this.rest.addEventListener("data-changed", function() {
         this.data = this.rest.parse(this.rest.completeData, this.collectionParsePath).slice();
-        console.log("rest-query: got data", this.collectionParsePath, this.rest.data.length);
+        // console.log("rest-query: got data", this.collectionParsePath, this.data.length);
       }.bind(this));
-      console.log("rest-query: waiting for data from rest", this.rest)
+      // console.log("rest-query: waiting for data from rest", this.rest)
     } else {
-      console.error("rest-query: can't get rest element", this.source);
+      // console.error("rest-query: can't get rest element", this.source);
     }
   },
 });

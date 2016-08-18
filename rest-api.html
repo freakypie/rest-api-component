@@ -56,7 +56,7 @@
       handleEndpointChanged: function() {
       },
       handleDataChanged: function() {
-        // console.log("data is changed", this.data.length, typeof this.data);
+        // console.log("data is changed", this, this.data);
       },
       handleError: function(e) {
         this.dispatchEvent(new CustomEvent("error", {detail: e}));
