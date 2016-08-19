@@ -144,7 +144,7 @@
 
         if (! /^http/.test(url)) {
           if (this.config && this.config.server) {
-            url = this.config.server + url + "?format=json";
+            url = (this.config.server + url).trim() + "?format=json";
           }
         }
 
