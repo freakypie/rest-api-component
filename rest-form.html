@@ -32,13 +32,21 @@ Polymer({
       },
       extraUrl: {
         type: String,
-      }
+      },
+      ignoreSubmitHandler: {
+        type: Boolean,
+        value: false,
+      },
     },
     listeners: {
       "click": "handleSubmit",
     },
     behaviors: [UseRest],
     handleSubmit: function(e) {
+      if (this.ignoreSubmitHandler) {
+        return;
+      }
+
       e.preventDefault();
       this.submit();
     },
